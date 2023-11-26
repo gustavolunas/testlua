@@ -1,0 +1,10 @@
+macro(200, "Transform", function()
+  if player:getOutfit().type ~= 172 then
+    say("transformar")
+  end
+end)
+
+
+UI.Button("Clique", function()
+  say(player:getOutfit().type)
+end)
