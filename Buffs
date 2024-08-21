@@ -1,1 +1,21 @@
+local Premium = true
+onTextMessage(function(mode, text)
+  if text:find("premium account.") then
+    Premium = false
+  end
+end)
 
+addIcon("Buff", {item={id=3292 , count=1}, text="Buff"}, macro(2000, function()
+  if not currentConfig then return end 
+    if isInPz() then return end
+    if attackers >= 1 then return end
+    for index, value in ipairs(currentConfig.BUFF) do
+      if (player:getSkillLevel(3) == 10 or player:getSkillLevel(3) == 21 or player:getSkillLevel(3) == 25) then
+        say(value.text)
+        delay(1500)
+      end
+      if (player:getSkillLevel(3) >= 50 and player:getSkillLevel(3) <= 80) then
+          say('kekkei genkai')
+      end
+    end
+end))
