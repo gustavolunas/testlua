@@ -1,0 +1,10 @@
+addIcon("Correr", {item={id=12953 , count=1}, text="Correr"}, macro(50, function()
+  delay(1500)
+  if isInPz() then return end
+  if attackers == 0 then
+  if (stopCombo and stopCombo >= now) then return end
+  if not hasHaste() and hppercent() >= 50 then
+    say('concentrate chakra feet')
+  end
+end
+end))
