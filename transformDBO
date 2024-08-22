@@ -61,7 +61,7 @@ onTalk(function(name, level, mode, text, channelId, pos)
   if not currentConfig then return end
   if name ~= player:getName() then return end
   text = text:lower();
-  for index, value in ipairs(currentConfig) do
+  for index, value in ipairs(currentConfig.COMBO) do
     if text == value.text:lower() then
       value.cooldown = now + value.cooldown;
       break
