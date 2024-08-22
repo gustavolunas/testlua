@@ -1,6 +1,7 @@
 local vocs = {
   guren = 1,
   itachi = 2,  
+minato = 3,
 }
 
 CONFIG = {
@@ -27,6 +28,15 @@ CONFIG = {
       {text = 'kibakuhou shabondama', cooldown = 2.5},
       {text = 'shabondama no jutsu', cooldown = 2.5},
       {text = 'santouka no jutsu', cooldown = 1.5},
+    },
+    BUFF = {
+      {text = 'baburukei'},
+    },
+  },
+
+  [vocs.minato] = {
+    COMBO = {
+      {text = 'rasengan', cooldown = 3.5},
     },
     BUFF = {
       {text = 'baburukei'},
