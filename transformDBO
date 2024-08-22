@@ -45,7 +45,7 @@ CONFIG = {
 }
 
 local currentConfig = nil
-addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(50, function()
+addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(20, function()
   if not currentConfig then return end
   local target = g_game.getAttackingCreature()
   if not g_game.isAttacking() or stopCombo and stopCombo >= now then return end
@@ -57,13 +57,11 @@ addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(50, function()
 end))
 
 onTalk(function(name, level, mode, text, channelId, pos)
-  if not currentConfig then return end
   if name ~= player:getName() then return end
   text = text:lower();
   for index, value in ipairs(currentConfig.COMBO) do
     if text == value.text:lower() then
       value.cooldown = now + (value.cooldown * 1000);
-      break
     end
   end
 end) 
