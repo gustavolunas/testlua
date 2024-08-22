@@ -1,6 +1,6 @@
 local vocs = {
   guren = 1,
-  itachi = 2,  
+  itachi = 2,
   minato = 3,
 }
 
@@ -34,9 +34,10 @@ CONFIG = {
     },
   },
 
-  [vocs.minato] = {
+[vocs.minato] = {
     COMBO = {
-      {text = 'rasen shuriken', cooldown = 3.5},
+      {text = 'rasengan', cooldown = 3500},
+      {text = 'fuuton rasenshuriken', cooldown = 3200},
     },
     BUFF = {
       {text = 'baburukei'},
@@ -45,8 +46,8 @@ CONFIG = {
 }
 
 local currentConfig = nil
-addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(20, function()
-  if not currentConfig.COMBO then return end
+addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(50, function()
+  if not currentConfig then return end
   local target = g_game.getAttackingCreature()
   if not g_game.isAttacking() or stopCombo and stopCombo >= now then return end
   for index, value in ipairs(currentConfig.COMBO) do
@@ -57,11 +58,13 @@ addIcon("Combo", {item={id=3292 , count=1}, text="Combo"}, macro(20, function()
 end))
 
 onTalk(function(name, level, mode, text, channelId, pos)
+  if not currentConfig then return end
   if name ~= player:getName() then return end
   text = text:lower();
-  for index, value in ipairs(currentConfig.COMBO) do
+  for index, value in ipairs(currentConfig) do
     if text == value.text:lower() then
-      value.cooldown = now + (value.cooldown * 1000);
+      value.cooldown = now + value.cooldown;
+      break
     end
   end
 end) 
