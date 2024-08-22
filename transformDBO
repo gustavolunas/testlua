@@ -36,7 +36,7 @@ CONFIG = {
 
   [vocs.minato] = {
     COMBO = {
-      {text = 'Fuuton Sohenka no Jutsu', cooldown = 3.5},
+      {text = 'throw shuriken', cooldown = 3.5},
     },
     BUFF = {
       {text = 'baburukei'},
