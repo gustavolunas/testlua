@@ -36,7 +36,7 @@ CONFIG = {
 
   [vocs.minato] = {
     COMBO = {
-      {text = 'rasengan', cooldown = 3.5},
+      {text = 'fuuton rasenshuriken', cooldown = 3.5},
     },
     BUFF = {
       {text = 'baburukei'},
