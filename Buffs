@@ -1,21 +1,2215 @@
-local Premium = true
-onTextMessage(function(mode, text)
-  if text:find("premium account.") then
-    Premium = false
+
+-------------------------- CORRER --------------------------
+local loadPanelName = "Correr"
+local ui2 = setupUI([[
+Panel
+  height: 25
+  margin-top: 0
+
+  UIButton
+    id: correrActive
+    font: verdana-11px-rounded
+    text: Correr
+    text-align: center
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 95
+    width: 60
+    height: 18
+    opacity: 0.70
+    
+  ]], parent)
+
+storage[loadPanelName] = storage.comboCorrer or false
+
+ui2.correrActive.onClick = function(widget)
+  storage.correrJutsu = not storage.correrJutsu
+  ui.correrActive:setColor(storage.correrJutsu and "#FF4500" or  "#828282")
+end
+
+macro(1, function()
+  label = (ui2.correrActive)
+if storage.correrJutsu then
+  label:setColor('#FF4500')
+else
+  label:setColor('#828282')
+end
+end
+)
+
+-------------------------- BUFF --------------------------
+
+local loadPanelName = "Buff"
+local ui3 = setupUI([[
+Panel
+  height: 25
+  margin-top: -5
+
+  UIButton
+    id: buffActive
+    font: verdana-11px-rounded
+    text: Buffs
+    text-align: center
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 95
+    width: 60
+    height: 18
+    opacity: 0.70
+  ]], parent)
+
+storage[loadPanelName] = storage.comboBuff or false
+
+ui3.buffActive.onClick = function(widget)
+  storage.comboBuff = not storage.comboBuff
+  ui.buffActive:setColor(storage.comboBuff and "#FF4500" or  "#828282")
+end
+
+macro(1, function()
+  label = (ui3.buffActive)
+if storage.comboBuff then
+  label:setColor('#FF4500')
+else
+  label:setColor('#828282')
+end
+end
+)
+
+
+----- CONFIG BUFF PAINEL ----
+local panelName = "extras"
+local ui = setupUI([[
+Panel
+
+  height: 25
+  margin-top: -25
+
+  UIButton
+    id: editMusica
+    font: verdana-11px-rounded
+    color: #00FFFF
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 17
+    width: 30
+    margin-left: 160
+    margin-top: 
+    text: 
+
+  ]], parent)
+  ui:setId(PanelName)
+
+if not storage[panelName] then
+  storage[panelName] = {
+}
+end
+
+local settings = storage[panelName]
+
+extrasWindow = UI.createWindow('ExtrasWindow', rootWidget)
+extrasWindow:hide()
+
+extrasWindow.closeButton.onClick = function(widget)
+  extrasWindow:hide()
+end
+
+local rightPanel = extrasWindow.content.right
+local leftPanel = extrasWindow.content.left
+
+ui.editMusica.onClick = function(widget)
+  extrasWindow:show()
+  extrasWindow:raise()
+  extrasWindow:focus()
+end
+
+UI.Label('Insert Buff1:', leftPanel)
+UI.Separator(leftPanel)
+UI.Label('Insert Buff2:', leftPanel)
+
+
+addTextEdit("Buff1, Medicine", storage.buff1 or "Buff1, Medicine", function(widget, text)
+  storage.buff1 = text;
+end, rightPanel);
+
+  UI.Separator(rightPanel)
+
+  addTextEdit("Buff2, Medicine", storage.buff2 or "Buff2, Medicine", function(widget, text)
+    storage.buff2 = text;
+  end, rightPanel);
+
+
+-------------------------- DASH --------------------------
+local loadPanelName = "Dash"
+local ui4 = setupUI([[
+Panel
+  height: 25
+  margin-top: -5
+
+  UIButton
+    id: dashActive
+    font: verdana-11px-rounded
+    text: Dashz
+    text-align: center
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 25
+    width: 60
+    height: 18
+    opacity: 0.70
+
+  ]], parent)
+
+storage[loadPanelName] = storage.comboDash or false
+
+ui4.dashActive.onClick = function(widget)
+  storage.comboDash = not storage.comboDash
+  ui.dashActive:setColor(storage.comboDash and "#FF4500" or  "#828282")
+end
+
+macro(1, function()
+  label = (ui4.dashActive)
+if storage.comboDash then
+  label:setColor('#FF4500')
+else
+  label:setColor('#828282')
+end
+end
+)
+
+-------------------------- STAIR --------------------------
+local loadPanelName = "Stair"
+local ui5 = setupUI([[
+Panel
+  height: 85
+  margin-top: -25
+
+  UIButton
+    id: stairActive
+    font: verdana-11px-rounded
+    text: Stair
+    text-align: center
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 95
+    width: 60
+    height: 18
+    opacity: 0.70
+    
+  ]], parent)
+
+storage[loadPanelName] = storage.comboStair or false
+
+ui5.stairActive.onClick = function(widget)
+  storage.comboStair = not storage.comboStair
+  ui.stairActive:setColor(storage.comboStair and "#FF4500" or  "#828282")
+end
+
+macro(1, function()
+  label = (ui5.stairActive)
+if storage.comboStair then
+  label:setColor('#FF4500')
+else
+  label:setColor('#828282')
+end
+end
+)
+
+scriptFuncs = {};
+comboSpellsWidget = {};
+fugaSpellsWidgets = {};
+
+scriptFuncs.readProfile = function(filePath, callback)
+  if g_resources.fileExists(filePath) then
+      local status, result = pcall(function()
+          return json.decode(g_resources.readFileContents(filePath))
+      end)
+      if not status then
+          return onError("Erro carregando arquivo (" .. filePath .. "). Para consertar o problema, exclua o arquivo. Detalhes: " .. result)
+      end
+
+      callback(result);
+  end
+end
+
+scriptFuncs.saveProfile = function(configFile, content)
+  local status, result = pcall(function()
+      return json.encode(content, 2)
+  end);
+
+  if not status then
+      return onError("Erro salvando configuração. Detalhes: " .. result);
+  end
+
+  if result:len() > 100 * 1024 * 1024 then
+      return onError("Arquivo de configuração acima de 100MB, não será salvo.");
+  end
+
+  g_resources.writeFileContents(configFile, result);
+end
+
+storageProfiles = {
+  comboSpells = {},
+  fugaSpells = {}
+}
+
+local currentOptionText = modules.game_bot.contentsPanel.config:getCurrentOption().text
+local configName = modules.game_bot.contentsPanel.config:getCurrentOption().text;
+
+-- Construa o caminho do diretório
+local MAIN_DIRECTORY = "/bot/" .. currentOptionText .. "/storage/"
+STORAGE_DIRECTORY = "" .. MAIN_DIRECTORY .. name() .. '.json';
+
+
+if not g_resources.directoryExists(MAIN_DIRECTORY) then
+  g_resources.makeDir(MAIN_DIRECTORY);
+end
+
+scriptFuncs.readProfile(STORAGE_DIRECTORY, function(result)
+  storageProfiles = result
+  if (type(storageProfiles.comboSpells) ~= 'table') then
+    storageProfiles.comboSpells = {};
+  end
+  if (type(storageProfiles.fugaSpells) ~= 'table') then
+      storageProfiles.fugaSpells = {};
+  end
+end);
+
+
+scriptFuncs.reindexTable = function(t)
+  if not t or type(t) ~= "table" then return end
+
+  local i = 0
+  for _, e in pairs(t) do
+      i = i + 1
+      e.index = i
+  end
+end
+
+firstLetterUpper = function(str)
+  return (str:gsub("(%a)([%w_']*)", function(first, rest) return first:upper()..rest:lower() end))
+end
+
+function formatTime(seconds)
+  if seconds < 60 then
+      return seconds .. 's'
+  else
+      local minutes = math.floor(seconds / 60)
+      local remainingSeconds = seconds % 60
+      return string.format("%dm %02ds", minutes, remainingSeconds)
+  end
+end
+
+
+formatRemainingTime = function(time)
+  local remainingTime = (time - now) / 1000;
+  local timeText = '';
+  timeText = string.format("%.0f", (time - now) / 1000).. "s";
+  return timeText;
+end
+
+
+attachSpellWidgetCallbacks = function(widget, spellId, table)
+  widget.onDragEnter = function(self, mousePos)
+      if not modules.corelib.g_keyboard.isCtrlPressed() then
+          return false
+      end
+      self:breakAnchors()
+      self.movingReference = { x = mousePos.x - self:getX(), y = mousePos.y - self:getY() }
+      return true
+  end
+
+  widget.onDragMove = function(self, mousePos, moved)
+      local parentRect = self:getParent():getRect()
+      local newX = math.min(math.max(parentRect.x, mousePos.x - self.movingReference.x), parentRect.x + parentRect.width - self:getWidth())
+      local newY = math.min(math.max(parentRect.y - self:getParent():getMarginTop(), mousePos.y - self.movingReference.y), parentRect.y + parentRect.height - self:getHeight())
+      self:move(newX, newY)
+      if table[spellId] then
+          table[spellId].widgetPos = {x = newX, y = newY}
+          scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles)
+      end
+      return true
+  end
+
+  widget.onDragLeave = function(self, pos)
+      return true
+  end
+end
+--[[
+function toMoveUp(window, table)
+  local action = window.spellList:getFocusedChild();
+  if (not action) then return; end
+  local index = window.spellList:getChildIndex(action);
+  if (index < 2) then return; end
+  window.spellList:moveChildToIndex(action, index - 1);
+  window.spellList:ensureChildVisible(action);
+  table[index].index = index - 1;
+  table[index - 1].index = index;
+  table.sort(table, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+function toMoveDown(window, table)
+  local action = window.spellList:getFocusedChild();
+  if (not action) then return; end
+  local index = window.spellList:getChildIndex(action);
+  if (index < 2) then return; end
+  window.spellList:moveChildToIndex(action, index - 1);
+  window.spellList:ensureChildVisible(action);
+  table[index].index = index - 1;
+  table[index - 1].index = index;
+  table.sort(table, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+]]--
+
+function stopToCast()
+  local selfHealth, hpEscape = g_game.getLocalPlayer():getHealthPercent(), ct()
+  for index, value in ipairs(storageProfiles.fugaSpells) do
+      if value.enabled and value.activeCooldown and value.activeCooldown >= now then return true; end
+      if selfHealth <= hpEscape + 5 then
+          if (not value.totalCooldown or value.totalCooldown <= now) then
+              return true;
+          end
+      end
+  end
+  return false;
+end
+
+function isAnySelectedKeyPressed()
+  for index, value in ipairs(storageProfiles.keySpells) do
+      if value.enabled and (modules.corelib.g_keyboard.isKeyPressed(value.keyPress)) then
+          return true;
+      end
+  end
+  return false;
+end 
+
+function canCastFuga()
+  for key, value in ipairs(storageProfiles.fugaSpells) do
+      local isLifesActive = (value.activeCooldown and value.activeCooldown >= now) and (value.enableLifes and value.lifes > 0);
+      local isMultipleActive = value.enableMultiple and value.count > 0 ;
+      local isNormalActive = value.activeCooldown and value.activeCooldown >= now;
+      if (isLifesActive or isNormalActive) then
+          return true;
+      end
+  end
+  return false;
+end
+
+function resetCooldowns()
+    if storageProfiles then
+      if storageProfiles.comboSpells then
+        for _, spell in ipairs(storageProfiles.comboSpells) do
+            spell.cooldownSpells = nil 
+        end
+    end
+        if storageProfiles.fugaSpells then
+            for _, spell in ipairs(storageProfiles.fugaSpells) do
+                spell.totalCooldown = nil;
+                spell.activeCooldown = nil;
+            end
+        end
+     end
+end
+
+scriptFuncs.readProfile(STORAGE_DIRECTORY, function(result)
+  storageProfiles = result;
+  if (type(storageProfiles.comboSpells) ~= 'table') then
+      storageProfiles.comboSpells = {};
+  end
+  if (type(storageProfiles.fugaSpells) ~= 'table') then
+      storageProfiles.fugaSpells = {};
+  end
+  resetCooldowns();
+end);
+
+scriptFuncs.reindexTable = function(t)
+    if not t or type(t) ~= "table" then return end
+
+    local i = 0
+    for _, e in pairs(t) do
+        i = i + 1
+        e.index = i
+    end
+end
+
+firstLetterUpper = function(str)
+    return (str:gsub("(%a)([%w_']*)", function(first, rest) return first:upper()..rest:lower() end))
+end
+
+storage['iconScripts'] = storage['iconScripts'] or {
+  comboMacro = true,
+    fugaMacro = false,
+    showInfos = false,
+    keyMacro = false
+}
+
+local isOn = storage['iconScripts'];
+
+function removeTable(tbl, index)
+    table.remove(tbl, index)
+end
+
+forceSay = function(t)
+    if type(t) ~= 'table' then
+        for i = 0, 10 do
+            stopCombo = now + 250;
+            return say(t)
+        end
+    end
+    for i = 0, 10 do
+        stopCombo = now + 250;
+        return say(t.toSay or t.text)
+    end
+end
+
+
+local spellEntry = [[
+UIWidget
+  background-color: alpha
+  text-offset: 18 0
+  focusable: true
+  height: 16
+
+  CheckBox
+    id: enabled
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 15
+    height: 15
+    margin-top: 0
+    margin-left: 3
+    image-source: /images/ui/checkbox_round
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: #FF4500
+  
+    $checked:
+      image-color: orange
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  $focus:
+    background-color: 
+    opacity: 0.4
+
+  CheckBox
+    id: showTimespell
+    anchors.left: enabled.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 15
+    height: 15
+    margin-top: 0
+    margin-left: 15
+    image-source: /images/ui/checkbox_round
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: orange
+  
+    $checked:
+      image-color: orange
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  $focus:
+    background-color: gray		
+    opacity: 0.9
+
+
+  Label
+    id: textToSet
+    anchors.left: showTimespell.left
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 15
+
+  Button
+    id: remove
+    !text: tr('x')
+    color: #FF4500
+    anchors.right: parent.right
+    margin-right: 10
+    width: 15
+    height: 15
+    tooltip: Remove Spell
+]]
+
+local widgetConfig = [[
+UIWidget
+  background-color: #00000055
+  font: verdana-11px-rounded
+  opacity: 1.00
+  padding: 0 8
+  focusable: true
+  phantom: false
+  draggable: true
+  text-auto-resize: true
+]]
+
+----------COMBO
+
+combobotPanelName = "combobot"
+local comboIcon = setupUI([[
+Panel
+  height: 100
+  margin-top: -125
+
+  UIButton
+    id: title
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-align: center
+    margin-left: 25
+    width: 60
+    height: 17
+    font: verdana-11px-rounded 
+    text: Combo
+    text-align: center
+    opacity: 0.70
+    
+  UIButton
+    id: settings
+    anchors.top: prev.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    margin-left: -85
+    margin-right: 155
+    width: 60
+    height: 17
+    text: 
+]])
+comboIcon:setId(combobotPanelName);
+
+local fundoconfigs = setupUI([[
+UIButton
+  id: fundoconfigs
+  anchors.horizontalCenter: parent.horizontalCenter
+  anchors.top: parent.top
+  text:
+  background-color: black
+  size: 250 45
+  margin-top: 40
+  opacity: 0.60
+  border: 2 black
+]],g_ui.getRootWidget())
+
+local panelName = "Combo"
+local cloretoOpenCombo = setupUI([[
+UIButton
+  id: Combo
+  anchors.horizontalCenter: parent.horizontalCenter
+  anchors.top: parent.top
+  image-source: /bot/Cloreto/imagens/espadas
+  tooltip: Configure aqui seu combo.
+  size: 30 30
+  margin-top: 48
+  margin-left: -100
+  opacity: 0.90
+  $hover:
+    opacity: 0.55
+]],g_ui.getRootWidget())
+
+
+
+
+comboInterface = setupUI([[
+
+comboInterface < UIWindow
+  size: 460 350
+  padding: 0
+  anchors.centerIn: parent
+
+
+BackgroundLB < Label
+  image-source: /bot/DonatorBot/imagens/fundo
+  opacity: 0.85
+  anchors.fill: parent
+
+BlackBorder < Label
+  anchors.fill: parent
+  focusable: false
+  phantom: true
+
+WindowTitle < Label
+  anchors.centerIn: parent
+  font: sans-bold-16px
+  text: COMBO MANAGER
+  text-auto-resize: true
+  color: orange
+  margin-bottom: 135
+
+comboInterface 
+  BackgroundLB
+  BlackBorder
+  WindowTitle
+
+  Panel
+    anchors.top: parent.top
+    anchors.right: sep2.left
+    anchors.left: parent.left
+    margin-top: 35
+    margin-left: 10
+    image-border: 6
+    padding: 3
+    size: 380 115
+    opacity: 0.50
+
+  Panel
+    anchors.top: parent.top
+    anchors.left: sep2.left
+    anchors.right: parent.right
+    anchors.bottom: separator.top
+    margin: 40 15 10 18
+    image-border: 6
+    padding: 3
+    size: 
+    opacity: 0.75
+
+  TextList
+    id: spellList
+    image-border: 1
+    anchors.left: parent.left
+    anchors.top: parent.top
+    padding: 1
+    background-color: black
+    opacity: 0.60
+    border: 2 black
+    size: 380 150
+    margin-top: 160
+    margin-left: 40
+    vertical-scrollbar: spellListScrollBar
+
+  VerticalScrollBar
+    id: spellListScrollBar
+    anchors.top: spellList.top
+    anchors.bottom: spellList.bottom
+    anchors.right: spellList.right
+    step: 10
+    pixels-scroll: true
+    background-color: white
+    opacity: 0.90
+
+  UIButton
+    id: moveUp
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-bottom: 195
+    margin-left: 60
+    text: /\
+    border: 1 orange
+    color: orange
+    size: 20 20
+    font: verdana-11px-rounded
+
+  UIButton
+    id: moveDown
+    anchors.bottom: parent.bottom
+    anchors.left: moveUp.left
+    margin-bottom: 195
+    margin-left: 30
+    text: \/
+    border: 1 orange
+    color: orange
+    size: 20 20
+    font: verdana-11px-rounded
+    
+
+  HorizontalSeparator
+    id: separator
+    anchors.right: parent.right
+    anchors.left: parent.left
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.bottom: closeButton.top
+    margin-bottom: 30
+    margin-left: 40
+    margin-right: 40
+
+  Label
+    id: castSpellLabel
+    anchors.left: castSpell.left
+    anchors.top: parent.top
+    text: Magia:
+    font: verdana-11px-rounded
+    text-auto-resize: true
+    color: white
+    margin-top: 58
+    margin-left: -49
+
+  TextEdit
+    id: castSpell
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 55
+    margin-left: 50
+    width: 120
+    height: 20
+
+  Label
+    id: orangeSpellLabel
+    anchors.left: orangeSpell.left
+    anchors.top: parent.top
+    text: Orange:
+    font: verdana-11px-rounded
+    color: white
+    margin-top: 98
+    margin-left: -49
+
+  TextEdit
+    id: orangeSpell
+    background-color: black
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 95
+    margin-left: 50
+    width: 100
+    height: 20
+
+  CheckBox
+    id: sameSpell
+    anchors.left: orangeSpellLabel.left
+    anchors.top: parent.top
+    margin-top: 97
+    margin-left: 153
+    image-source: /images/ui/checkbox_round
+    tooltip: Orange Spell = Cast Spell?
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: white
+  
+    $checked:
+      image-color: white
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  Label
+    id: onScreenLabel
+    anchors.left: orangeSpell.left
+    anchors.top: parent.top
+    text: Screen:
+    font: verdana-11px-rounded
+    color: white
+    margin-top: 138
+    margin-left: -50
+
+  TextEdit
+    id: onScreen
+    background-color: white
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-left: 50
+    margin-top: 135
+    width: 120
+    height: 20
+
+  Label
+    id: cooldownLabel
+    anchors.left: cooldown.left
+    anchors.top: parent.top
+    margin-top: 58
+    margin-left: -28
+    text: CD:
+    font: verdana-11px-rounded
+    color: white
+
+  HorizontalScrollBar
+    id: cooldown
+    anchors.left: spellList.left
+    margin-left: 220
+    anchors.top: parent.top
+    margin-top: 58  
+    width: 147
+    minimum: 0
+    maximum: 60000
+    step: 100
+
+  Button
+    id: findCD
+    anchors.left: cooldown.right
+    anchors.top: parent.top
+    margin-top: 57
+    margin-left: 5
+    tooltip: Calcular cooldown automatico?
+    text: !
+    font: verdana-11px-rounded
+    color: orange
+    size: 15 15
+
+  Label
+    id: distanceLabel
+    anchors.left: cooldown.left
+    anchors.top: parent.top
+    margin-top: 100
+    margin-left: -28
+    text: Dist:
+    color: white
+    font: verdana-11px-rounded
+
+  HorizontalScrollBar
+    id: distance
+    anchors.left: spellList.left
+    margin-left: 220
+    anchors.top: parent.top
+    margin-top: 100
+    width: 160
+    minimum: 0
+    maximum: 10
+    step: 1
+
+  UIButton
+    id: insertSpell
+    text: Adicionar
+    color: orange
+    border: 1 orange
+    font: verdana-11px-rounded
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 80 20
+    margin-bottom: 195
+    margin-right: 41
+
+
+  UIButton
+    id: closeButton
+    !text: tr('X')
+    color: red
+    font: sans-bold-16px
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 15 15
+    margin-right: 30
+    margin-bottom: 310
+      
+]], g_ui.getRootWidget())
+comboInterface:hide();
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+local labelcb = (comboIcon.title)
+comboIcon.title:setOn(isOn.comboMacro);
+comboIcon.title.onClick = function(widget)
+    isOn.comboMacro = not isOn.comboMacro;
+    widget:setOn(isOn.comboMacro);
+    scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+
+macro(1, function()
+  if isOn.comboMacro then
+    labelcb:setColor('#FF4500')
+  else
+    labelcb:setColor('#828282')
+  end
+end
+)
+
+cloretoOpenCombo.onClick = function(widget)
+    if not comboInterface:isVisible() then
+        comboInterface:show();
+        comboInterface:raise();
+        comboInterface:focus();
+    else
+        comboInterface:hide();
+        scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+    end
+end
+
+comboInterface.closeButton.onClick = function(widget)
+    comboInterface:hide();
+    scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+comboInterface.cooldown:setText('0ms')
+comboInterface.cooldown.onValueChange = function(widget, value)
+    if value >= 1000 then
+        widget:setText(value/1000 .. 's')
+    else
+        widget:setText(value .. 'ms')
+    end
+end
+
+comboInterface.distance:setText('0')
+comboInterface.distance.onValueChange = function(widget, value)
+    widget:setText(value)
+end
+
+
+comboInterface.sameSpell:setChecked(true);
+comboInterface.orangeSpell:setEnabled(false);
+comboInterface.sameSpell.onCheckChange = function(widget, checked)
+    if checked then
+        comboInterface.orangeSpell:setEnabled(false)
+    else
+        comboInterface.orangeSpell:setEnabled(true)
+        comboInterface.orangeSpell:setText(comboInterface.castSpell:getText())
+    end
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+function refreshComboList(list, table)
+    if table then
+        for i, child in pairs(list.spellList:getChildren()) do
+            child:destroy();
+        end
+        for _, widget in pairs(comboSpellsWidget) do
+            widget:destroy()
+        end
+        for index, entry in ipairs(table) do
+            local label = setupUI(spellEntry, list.spellList)
+            local newWidget = setupUI(widgetConfig, g_ui.getRootWidget())
+            newWidget:setText(firstLetterUpper(entry.spellCast))
+            attachSpellWidgetCallbacks(newWidget, entry.index, storageProfiles.comboSpells)
+            if not entry.widgetPos then
+                entry.widgetPos = {x = 0, y = 50}
+            end
+            newWidget:setPosition(entry.widgetPos)
+            comboSpellsWidget[entry.index] = newWidget;
+            comboSpellsWidget[entry.index] = newWidget;
+            label.onDoubleClick = function(widget)
+                local spellTable = entry;
+                list.castSpell:setText(spellTable.spellCast);
+                list.orangeSpell:setText(spellTable.orangeSpell);
+                list.onScreen:setText(spellTable.onScreen);
+                list.cooldown:setValue(spellTable.cooldown);
+                list.distance:setValue(spellTable.distance);
+                for i, v in ipairs(storageProfiles.comboSpells) do
+                    if v == entry then
+                        removeTable(storageProfiles.comboSpells, i)
+                    end
+                end
+                scriptFuncs.reindexTable(table);
+                newWidget:destroy();
+                label:destroy();
+            end
+            label.enabled:setChecked(entry.enabled);
+            label.enabled:setTooltip(not entry.enabled and 'Enable Spell' or 'Disable Spell');
+            label.enabled.onClick = function(widget)
+                entry.enabled = not entry.enabled;
+                label.enabled:setChecked(entry.enabled);
+                label.enabled:setTooltip(not entry.enabled and 'Enable Spell' or 'Disable Spell');
+                scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+            end
+            label.showTimespell:setChecked(entry.enableTimeSpell)
+            label.showTimespell:setTooltip(not entry.enableTimeSpell and 'Enable Time Spell' or 'Disable Time Spell');
+            label.showTimespell.onClick = function(widget)
+                entry.enableTimeSpell = not entry.enableTimeSpell;
+                label.showTimespell:setChecked(entry.enableTimeSpell);
+                label.showTimespell:setTooltip(not entry.enableTimeSpell and 'Enable Time Spell' or 'Disable Time Spell');
+                if entry.enableTimeSpell then
+                    newWidget:show();
+                else
+                    newWidget:hide();
+                end
+                scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+            end
+            if entry.enableTimeSpell then
+                newWidget:show();
+            else
+                newWidget:hide();
+            end
+            label.remove.onClick = function(widget)
+                for i, v in ipairs(storageProfiles.comboSpells) do
+                    if v == entry then
+                        removeTable(storageProfiles.comboSpells, i)
+                    end
+                end
+                scriptFuncs.reindexTable(table);
+                newWidget:destroy();
+                label:destroy();
+            end
+            label.onClick = function(widget)
+                comboInterface.moveDown:show();
+                comboInterface.moveUp:show();
+            end
+            label.textToSet:setText(firstLetterUpper('Jutsu: '.. entry.spellCast .. ' | Cooldown: ' .. entry.cooldown ..' | Distance: '.. entry.distance ..''));
+	    label.textToSet:setColor("white")
+	    label.textToSet:setFont("verdana-11px-rounded")
+            label:setTooltip('Msg Laranja: ' .. entry.orangeSpell .. ' | Nome na Tela: ' .. entry.onScreen .. ' ')
+        end
+    end
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+comboInterface.insertSpell.onClick = function(widget)
+  local spellName = comboInterface.castSpell:getText():trim():lower();
+  local orangeMsg = comboInterface.orangeSpell:getText():trim():lower();
+  local onScreen = comboInterface.onScreen:getText();
+  orangeMsg = (orangeMsg:len() == 0) and spellName or orangeMsg;
+  local cooldown = comboInterface.cooldown:getValue();
+  local distance = comboInterface.distance:getValue();
+  if (not spellName or spellName:len() == 0) then
+      return warn('Invalid Spell Name.');
+  end
+  if (not comboInterface.sameSpell:isChecked() and comboInterface.orangeSpell:getText():len() == 0) then
+      return warn('Invalid Orange Spell.')
+  end
+  if (not onScreen or onScreen:len() == 0) then
+      return warn('Invalid Text On Screen')
+  end
+  if (cooldown == 0) then
+      return warn('Invalid Cooldown.')
+  end
+  if (distance == 0) then
+      return warn('Invalid Distance')
+  end
+  local newSpell = {
+      index = #storageProfiles.comboSpells + 1,
+      spellCast = spellName,
+      onScreen = onScreen,
+      orangeSpell = orangeMsg,
+      cooldown = cooldown,
+      distance = distance,
+      enableTimeSpell = true,
+      enabled = true
+  }
+  table.insert(storageProfiles.comboSpells, newSpell)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles)
+  refreshComboList(comboInterface, storageProfiles.comboSpells)
+  comboInterface.castSpell:clearText();
+  comboInterface.orangeSpell:clearText();
+  comboInterface.onScreen:clearText();
+  comboInterface.sameSpell:setChecked(true);
+  comboInterface.orangeSpell:setEnabled(false);
+  comboInterface.cooldown:setValue(0);
+  comboInterface.distance:setValue(0);
+end
+
+refreshComboList(comboInterface, storageProfiles.comboSpells);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+comboInterface.moveUp.onClick = function()
+  local action = comboInterface.spellList:getFocusedChild();
+  if (not action) then return; end
+  local index = comboInterface.spellList:getChildIndex(action);
+  if (index < 2) then return; end
+  comboInterface.spellList:moveChildToIndex(action, index - 1);
+  comboInterface.spellList:ensureChildVisible(action);
+  storageProfiles.comboSpells[index].index = index - 1;
+  storageProfiles.comboSpells[index - 1].index = index;
+  table.sort(storageProfiles.comboSpells, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+comboInterface.moveDown.onClick = function()
+  local action = comboInterface.spellList:getFocusedChild()
+  if not action then return end
+  local index = comboInterface.spellList:getChildIndex(action)
+  if index >= comboInterface.spellList:getChildCount() then return end
+  comboInterface.spellList:moveChildToIndex(action, index + 1);
+  comboInterface.spellList:ensureChildVisible(action);
+  storageProfiles.comboSpells[index].index = index + 1;
+  storageProfiles.comboSpells[index + 1].index = index;
+  table.sort(storageProfiles.comboSpells, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+comboInterface.findCD.onClick = function(widget)
+    detectOrangeSpell, testSpell = true, true;
+    spellTime = {0, ''}
+end
+
+macro(100, function()
+    if testSpell then
+        say(comboInterface.castSpell:getText())
+    end
+end);
+
+onTalk(function(name, level, mode, text, channelId, pos)
+    if not detectOrangeSpell then return; end
+    if player:getName() ~= name then return; end
+
+    local verifying = comboInterface.orangeSpell:getText():len() > 0 and comboInterface.orangeSpell:getText():lower():trim() or comboInterface.castSpell:getText():lower():trim();
+
+    if text:lower():trim() == verifying then
+        if spellTime[2] == verifying then
+            comboInterface.cooldown:setValue(now - spellTime[1]);
+            spellTime = {now, verifying}
+            detectOrangeSpell = false;
+            testSpell = false;
+        else
+            spellTime = {now, verifying}
+        end
+    end
+end);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+macro(100, function()
+    if not (comboSpellsWidget or storageProfiles.comboSpells) then return; end
+    for index, spellConfig in ipairs(storageProfiles.comboSpells) do
+        local widget = comboSpellsWidget[spellConfig.index];
+        if widget then
+            if (not spellConfig.cooldownSpells or spellConfig.cooldownSpells < now) then
+                widget:setColor('green')
+                widget:setText(firstLetterUpper(spellConfig.onScreen) .. ' :  0s')
+            else
+                widget:setColor('red')
+                widget:setText(firstLetterUpper(spellConfig.onScreen) .. ' : ' .. formatRemainingTime(spellConfig.cooldownSpells))
+            end
+        end
+    end
+end);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+macro(100, function()
+    if (not comboIcon.title:isOn()) then return; end
+    if stopCombo and stopCombo >= now then return; end
+    if not g_game.isAttacking() then return; end
+    local playerPos = player:getPosition();
+    local target = g_game.getAttackingCreature();
+    local targetPos = target:getPosition();
+    if not targetPos then return; end
+    local targetDistance = getDistanceBetween(playerPos, targetPos);
+    for index, value in ipairs(storageProfiles.comboSpells) do
+        if value.enabled and targetDistance <= value.distance then
+            if (not value.cooldownSpells or value.cooldownSpells <= now) then
+                say(value.spellCast)
+            end
+        end
+    end
+end);
+
+
+onTalk(function(name, level, mode, text, channelId, pos)
+    text = text:lower();
+    if name ~= player:getName() then return; end
+    for index, value in ipairs(storageProfiles.comboSpells) do
+        if text == value.orangeSpell then
+            value.cooldownSpells = now + value.cooldown;
+        end
+    end
+end);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------FUGAS
+
+
+fugaIcon = setupUI([[
+Panel
+  height: 100
+  margin-top: -75
+  
+  UIButton
+    id: title
+    anchors.top: parent.top
+    anchors.left: parent.left
+    margin-left: 25
+    text-align: center
+    width: 60
+    height: 18
+    text: Fugas
+    margin-top: -5
+    font: verdana-11px-rounded
+    opacity: 0.70
+
+  UIButton
+    id: settings
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: -85
+    margin-right: 165
+    width: 25
+    height: 18
+    text: 
+    color: orange
+    font: verdana-11px-rounded
+
+]])
+
+
+local widgetConfig = [[
+UIWidget
+  background-color: black
+  font: verdana-11px-rounded
+  opacity: 0.70
+  padding: 0 5
+  focusable: true
+  phantom: false
+  draggable: true
+  text-auto-resize: true
+]]
+
+
+fugaInterface = setupUI([[
+
+MainWindow
+  text: Fuga Painel
+  size: 520 260
+  font: sans-bold-16px
+  color: orange
+  
+  Panel
+    image-source: /images/ui/panel_flat
+    anchors.top: parent.top
+    anchors.right: sep2.left
+    anchors.left: parent.left
+    anchors.bottom: separator.top
+    margin: 5 5 5 5
+    image-border: 6
+    padding: 3
+    size: 480 195
+
+  Panel
+    image-source: 
+    anchors.top: parent.top
+    anchors.left: sep2.left
+    anchors.right: parent.right
+    anchors.bottom: separator.top
+    margin: 5 5 5 5
+    image-border: 6
+    padding: 3
+    size: 320 235
+
+  TextList
+    id: spellList
+    anchors.left: parent.left
+    anchors.top: parent.top
+    padding: 5
+    size: 250 150 
+    margin-top: 20
+    margin-left: 220
+    vertical-scrollbar: spellListScrollBar
+    image-source: /images/ui/panel_content
+    
+  VerticalScrollBar
+    id: spellListScrollBar
+    anchors.top: spellList.top
+    anchors.bottom: spellList.bottom
+    anchors.right: spellList.right
+    step: 20
+    pixels-scroll: false
+
+  Button
+    id: moveUp
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-bottom: 70
+    margin-left: -45
+    text: /\
+    size: 20 30
+    font: verdana-11px-rounded
+    color: orange
+    !tooltip: tr('Move a magia para cima.')
+      $hover:
+        opacity: 1.0
+      
+      $pressed:
+        opacity: 0.9
+        image-color: #363636  
+
+  Button
+    id: moveDown
+    anchors.bottom: parent.bottom
+    anchors.left: moveUp.left
+    margin-bottom: 35
+    margin-left: -0
+    text: \/
+    size: 20 30
+    font: verdana-11px-rounded
+    color: orange
+    !tooltip: tr('Move a magia para baixo.')
+      $hover:
+        opacity: 1.0
+      
+      $pressed:
+        opacity: 0.9
+        image-color: #363636  
+        
+  Label
+    id: castSpellLabel
+    anchors.left: castSpell.left
+    anchors.top: parent.top
+    text: Magia:
+    font: verdana-11px-rounded
+    text-align: center
+    margin-top: 15
+    margin-left: 0
+    color: white
+
+  TextEdit
+    id: castSpell
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-left: -200
+    margin-top: 30
+    width: 110
+    height: 20
+    background-color: white
+
+  Label
+    id: orangeSpellLabel
+    anchors.left: orangeSpell.left
+    anchors.top: parent.top
+    text: Orange Msg: 
+    font: verdana-11px-rounded
+    margin-top: 55
+    margin-left: 0
+    color: white
+
+  TextEdit
+    id: orangeSpell
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 70
+    margin-left: -200
+    width: 90
+    height: 20
+    background-color: white
+
+  CheckBox
+    id: sameSpell
+    anchors.left: orangeSpellLabel.right
+    anchors.top: parent.top
+    margin-top: 72
+    margin-left: 25
+    image-source: /images/ui/checkbox_round
+    tooltip: Orange Spell = Cast Spell?
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: white
+  
+    $checked:
+      image-color: white
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  Label
+    id: onScreenLabel
+    anchors.left: orangeSpell.left
+    anchors.top: parent.top
+    text: Screen:
+    font: verdana-11px-rounded
+    margin-top: 15
+    margin-left: 120
+    color: white
+
+  TextEdit
+    id: onScreen
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-left: -80
+    margin-top: 30
+    width: 70
+    height: 20
+    background-color: white
+
+  Label
+    id: teclaLabel
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 55
+    margin-left: -81
+    text: Tecla:
+    font: verdana-11px-rounded
+    color: white
+
+  TextEdit
+    id: keyPress
+    anchors.left: spellList.left
+    margin-top: 70
+    margin-left: -80
+    anchors.top: parent.top
+    background-color: white
+    width: 70
+    height: 20
+
+  Label
+    id: cooldownTotalLabel
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 100
+    margin-left: -200
+    text: Cd Total:
+    font: verdana-11px-rounded
+    color: white
+
+  HorizontalScrollBar
+    id: cooldownTotal
+    anchors.left: spellList.left
+    margin-left: -200
+    anchors.top: parent.top
+    margin-top: 115
+    width: 160
+    minimum: 0
+    maximum: 180
+    step: 1
+
+  Label
+    id: cooldownActiveLabel
+    anchors.left: spellList.left
+    anchors.top: parent.top
+    margin-top: 135
+    margin-left: -200
+    text: Cd Ativo:
+    font: verdana-11px-rounded
+    color: white
+
+  HorizontalScrollBar
+    id: cooldownActive
+    anchors.left: spellList.left
+    margin-left: -200
+    anchors.top: parent.top
+    margin-top: 150
+    width: 160
+    minimum: 0
+    maximum: 60
+    step: 1
+
+  Label
+    id: textrevive
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    text: Tipo Fugas:
+    font: verdana-11px-rounded
+    margin-bottom: 11
+    margin-left: -190
+    color: white
+
+  CheckBox
+    id: reviveOption
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-bottom: 10
+    margin-left: -140
+    image-source: /images/ui/checkbox_round
+    tooltip: Fuga de Reviver [ex: izanagi]
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: white
+  
+    $checked:
+      image-color: white
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  CheckBox
+    id: lifesOption
+    anchors.bottom: parent.bottom
+    anchors.left: reviveOption.right
+    margin-bottom: 10
+    margin-left: 20
+    image-source: /images/ui/checkbox_round
+    tooltip: Fuga de Vidas [ex: Jiongu no Jutsu]
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: white
+  
+    $checked:
+      image-color: white
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+  CheckBox
+    id: multipleOption
+    anchors.bottom: parent.bottom
+    anchors.left: lifesOption.right
+    margin-bottom: 10
+    margin-left: 20
+    image-source: /images/ui/checkbox_round
+    tooltip: Fuga de Diversos Scapes [ex: Bangata Karasu]
+
+    $hover !disabled:
+      image-color: white
+  
+    $!checked:
+      image-color: white
+  
+    $checked:
+      image-color: white
+  
+    $disabled:
+      image-color: #dfdfdf88
+      color: #dfdfdf88
+      opacity: 0.8
+      change-cursor-image: false
+
+
+  SpinBox
+    id: lifesValue
+    anchors.bottom: parent.bottom
+    anchors.left: lifesOption.right
+    margin-bottom: 10
+    margin-left: 5
+    size: 20 20
+    minimum: 0
+    maximum: 10
+    step: 1
+    editable: true
+    focusable: true
+
+  Button
+    id: insertSpell
+    text: Adicionar
+    font: 
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 251 17
+    margin-bottom: 9
+    margin-right: 16
+
+  Button
+    id: backClose
+    image-source: /images/ui/panel_flat
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 20 20
+    margin-right: -2
+    margin-bottom: 185
+
+  UIButton
+    id: closeButton
+    text: X
+    color: red
+    font: sans-bold-16px
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 22 22
+    margin-right: -3
+    margin-bottom: 184
+
+      
+]], g_ui.getRootWidget())
+fugaInterface:hide();
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local label2 = (fugaIcon.title)
+fugaIcon.title:setOn(isOn.fugaMacro);
+fugaIcon.title.onClick = function(widget)
+    isOn.fugaMacro = not isOn.fugaMacro;
+    widget:setOn(isOn.fugaMacro);
+    scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+macro(1, function()
+  if isOn.fugaMacro then
+    label2:setColor('#FF4500')
+  else
+    label2:setColor('#828282')
+  end
+end
+)
+
+fugaIcon.settings.onClick = function(widget)
+    if not fugaInterface:isVisible() then
+        fugaInterface:show();
+        fugaInterface:raise();
+        fugaInterface:focus();
+    else
+        fugaInterface:hide();
+        scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+    end
+end
+
+fugaInterface.closeButton.onClick = function(widget)
+    fugaInterface:hide();
+    scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+fugaInterface.cooldownTotal:setText('0s')
+fugaInterface.cooldownTotal.onValueChange = function(widget, value)
+    local formattedTime = formatTime(value)
+    widget:setText(value .. 's')
+    --widget:setText(formattedTime)
+end
+
+fugaInterface.cooldownActive:setText('0s')
+fugaInterface.cooldownActive.onValueChange = function(widget, value)
+    local formattedTime = formatTime(value)
+    widget:setText(value .. 's')
+    --widget:setText(formattedTime)
+end
+
+
+fugaInterface.sameSpell:setChecked(true);
+fugaInterface.orangeSpell:setEnabled(false);
+fugaInterface.sameSpell.onCheckChange = function(widget, checked)
+    if checked then
+        fugaInterface.orangeSpell:setEnabled(false)
+    else
+        fugaInterface.orangeSpell:setEnabled(true)
+        fugaInterface.orangeSpell:setText(fugaInterface.castSpell:getText())
+    end
+end
+
+fugaInterface.lifesValue:hide();
+fugaInterface.lifesOption.onCheckChange = function(self, checked)
+    if checked then
+        fugaInterface.multipleOption:hide();
+        fugaInterface.lifesValue:show();
+    else
+        fugaInterface.multipleOption:show();
+        fugaInterface.lifesValue:hide();
+    end
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function refreshFugaList(list, table)
+    if table then
+        for i, child in pairs(list.spellList:getChildren()) do
+            child:destroy();
+        end
+        for _, widget in pairs(fugaSpellsWidgets) do
+            widget:destroy();
+        end
+        for index, entry in ipairs(table) do
+            local label = setupUI(spellEntry, list.spellList)
+            local newWidget = setupUI(widgetConfig, g_ui.getRootWidget())
+            newWidget:setText(firstLetterUpper(entry.spellCast))
+            attachSpellWidgetCallbacks(newWidget, entry.index, storageProfiles.fugaSpells)
+  
+            if not entry.widgetPos then
+                entry.widgetPos = {x = 0, y = 50}
+            end
+            if entry.enableTimeSpell then
+              newWidget:show();
+            else
+              newWidget:hide();
+            end
+            newWidget:setPosition(entry.widgetPos)
+            fugaSpellsWidgets[entry.index] = newWidget;
+            label.onDoubleClick = function(widget)
+                local spellTable = entry;
+                list.castSpell:setText(spellTable.spellCast);
+                list.orangeSpell:setText(spellTable.orangeSpell);
+                list.onScreen:setText(spellTable.onScreen);
+                list.keyPress:setText(spellTable.keyPress);
+                list.cooldownTotal:setValue(spellTable.cooldownTotal);
+                list.cooldownActive:setValue(spellTable.cooldownActive);
+                for i, v in ipairs(storageProfiles.fugaSpells) do
+                    if v == entry then
+                        removeTable(storageProfiles.fugaSpells, i)
+                    end
+                end
+                scriptFuncs.reindexTable(table);
+                newWidget:destroy();
+                label:destroy();
+            end
+            label.enabled:setChecked(entry.enabled);
+            label.enabled:setTooltip(not entry.enabled and 'Enable Spell' or 'Disable Spell');
+            label.enabled.onClick = function(widget)
+                entry.enabled = not entry.enabled;
+                label.enabled:setChecked(entry.enabled);
+                label.enabled:setTooltip(not entry.enabled and 'Enable Spell' or 'Disable Spell');
+                scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+            end
+            label.showTimespell:setChecked(entry.enableTimeSpell)
+            label.showTimespell:setTooltip(not entry.enableTimeSpell and 'Enable Time Spell' or 'Disable Time Spell');
+            label.showTimespell.onClick = function(widget)
+                entry.enableTimeSpell = not entry.enableTimeSpell;
+                label.showTimespell:setChecked(entry.enableTimeSpell);
+                label.showTimespell:setTooltip(not entry.enableTimeSpell and 'Enable Time Spell' or 'Disable Time Spell');
+                if entry.enableTimeSpell then
+                    newWidget:show();
+                else
+                    newWidget:hide();
+                end
+                scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+            end
+            label.remove.onClick = function(widget)
+                for i, v in ipairs(storageProfiles.fugaSpells) do
+                    if v == entry then
+                        removeTable(storageProfiles.fugaSpells, i)
+                    end
+                end
+                scriptFuncs.reindexTable(table);
+                newWidget:destroy();
+                label:destroy();
+            end
+            label.onClick = function(widget)
+                fugaInterface.moveDown:show();
+                fugaInterface.moveUp:show();
+            end
+            label.textToSet:setText(firstLetterUpper(" JUTSU: [ "  .. entry.spellCast .. " ] "));
+	    label.textToSet:setColor("white")
+	    label.textToSet:setFont("verdana-11px-rounded")
+            label:setTooltip('On Screen: ' .. entry.onScreen .. '')
+        end
+    end
+  end
+  
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+fugaInterface.moveUp.onClick = function()
+  local action = fugaInterface.spellList:getFocusedChild();
+  if (not action) then return; end
+  local index = fugaInterface.spellList:getChildIndex(action);
+  if (index < 2) then return; end
+  fugaInterface.spellList:moveChildToIndex(action, index - 1);
+  fugaInterface.spellList:ensureChildVisible(action);
+  storageProfiles.fugaSpells[index].index = index - 1;
+  storageProfiles.fugaSpells[index - 1].index = index;
+  table.sort(storageProfiles.fugaSpells, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+fugaInterface.moveDown.onClick = function()
+  local action = fugaInterface.spellList:getFocusedChild()
+  if not action then return; end
+  local index = fugaInterface.spellList:getChildIndex(action)
+  if index >= fugaInterface.spellList:getChildCount() then return end
+  fugaInterface.spellList:moveChildToIndex(action, index + 1);
+  fugaInterface.spellList:ensureChildVisible(action);
+  storageProfiles.fugaSpells[index].index = index + 1;
+  storageProfiles.fugaSpells[index + 1].index = index;
+  table.sort(storageProfiles.fugaSpells, function(a,b) return a.index < b.index end)
+  scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles);
+end
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+fugaInterface.insertSpell.onClick = function(widget)
+    local spellName = fugaInterface.castSpell:getText():trim();
+    local orangeMsg = fugaInterface.orangeSpell:getText():trim();
+    local onScreen = fugaInterface.onScreen:getText();
+    local keyPress = fugaInterface.keyPress:getText();
+    orangeMsg = (orangeMsg:len() == 0) and spellName or orangeMsg;
+    local cooldownTotal = fugaInterface.cooldownTotal:getValue();
+    local cooldownActive = fugaInterface.cooldownActive:getValue();
+    
+    if spellName:len() == 0 then
+        return warn('Invalid Spell Name.');
+    end
+    if not fugaInterface.sameSpell:isChecked() and orangeMsg:len() == 0 then
+        return warn('Invalid Orange Spell.')
+    end
+    if onScreen:len() == 0 then
+        return warn('Invalid Text On Screen')
+    end
+    if cooldownTotal == 0 then
+        return warn('Invalid Cooldown Total.')
+    end
+  
+    local spellConfig = {
+        index = #storageProfiles.fugaSpells + 1,
+        spellCast = spellName,
+        orangeSpell = orangeMsg,
+        onScreen = onScreen,
+        keyPress = keyPress,
+        cooldownActive = cooldownActive,
+        cooldownTotal = cooldownTotal,
+        enableTimeSpell = true,
+        enabled = true
+    }
+  
+    if fugaInterface.lifesOption:isChecked() then
+        spellConfig.lifes = 0;
+        spellConfig.enableLifes = true;
+        if fugaInterface.lifesValue:getValue() == 0 then
+          return warn('Invalid Life Value.')
+        end
+        spellConfig.amountLifes = fugaInterface.lifesValue:getValue();
+    end
+    if fugaInterface.reviveOption:isChecked() then
+        spellConfig.enableRevive = true;
+        spellConfig.alreadyChecked = false;
+    end
+    if fugaInterface.multipleOption:isChecked() then
+        spellConfig.enableMultiple = true; 
+        spellConfig.count = 3;
+    end
+    table.insert(storageProfiles.fugaSpells, spellConfig)
+    refreshFugaList(fugaInterface, storageProfiles.fugaSpells)
+    scriptFuncs.saveProfile(STORAGE_DIRECTORY, storageProfiles)
+  
+    fugaInterface.castSpell:clearText()
+    fugaInterface.orangeSpell:clearText()
+    fugaInterface.onScreen:clearText()
+    fugaInterface.cooldownTotal:setValue(0)
+    fugaInterface.cooldownActive:setValue(0)
+    fugaInterface.keyPress:clearText()
+    fugaInterface.reviveOption:setChecked(false);
+    fugaInterface.lifesOption:setChecked(false);
+    fugaInterface.multipleOption:setChecked(false);
+    fugaInterface.multipleOption:show();
+    fugaInterface.lifesValue:hide();
+  end
+  
+  refreshFugaList(fugaInterface, storageProfiles.fugaSpells);
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+storage.widgetPos = storage.widgetPos or {};
+informationWidget = {};
+
+local widgetNames = {
+  'showText',
+}
+
+for i, widgetName in ipairs(widgetNames) do
+    informationWidget[widgetName] = setupUI(widgetConfig, g_ui.getRootWidget())
+end
+
+local function attachSpellWidgetCallbacks(key)
+  informationWidget[key].onDragEnter = function(widget, mousePos)
+      if not modules.corelib.g_keyboard.isCtrlPressed() then
+        return false
+      end
+      widget:breakAnchors()
+      widget.movingReference = { x = mousePos.x - widget:getX(), y = mousePos.y - widget:getY() }
+      return true
+  end
+
+  informationWidget[key].onDragMove = function(widget, mousePos, moved)
+      local parentRect = widget:getParent():getRect()
+      local x = math.min(math.max(parentRect.x, mousePos.x - widget.movingReference.x), parentRect.x + parentRect.width - widget:getWidth())
+      local y = math.min(math.max(parentRect.y - widget:getParent():getMarginTop(), mousePos.y - widget.movingReference.y), parentRect.y + parentRect.height - widget:getHeight())        
+      widget:move(x, y)
+      return true
+  end
+
+  informationWidget[key].onDragLeave = function(widget, pos)
+    storage.widgetPos[key] = {}
+    storage.widgetPos[key].x = widget:getX();
+    storage.widgetPos[key].y = widget:getY();
+    return true
+  end
+end
+
+for key, value in pairs(informationWidget) do
+  attachSpellWidgetCallbacks(key)
+  informationWidget[key]:setPosition(
+      storage.widgetPos[key] or {0, 50}
+  )
+end
+
+local toShow = informationWidget['showText'];
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+macro(100, function()
+  if isOn.showInfos then
+      for _, value in ipairs(storageProfiles.fugaSpells) do
+          if value.selfHealth then
+              toShow:show()
+              toShow:setText('INIMIGOS: ' .. getPlayersAttack(false) .. ' | PERCENT: ' .. calculatePercentage(value.selfHealth) .. '%')
+              return;
+          end
+      end
+  else
+      toShow:hide();
+  end
+end);
+ 
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+macro(100, function()
+    if not (fugaSpellsWidgets and storageProfiles.fugaSpells) then return; end
+    
+    for index, spellConfig in ipairs(storageProfiles.fugaSpells) do
+        local widget = fugaSpellsWidgets[spellConfig.index];
+        if widget then
+            local textToSet = firstLetterUpper(spellConfig.onScreen)
+            local color = 'green'
+            if spellConfig.activeCooldown and spellConfig.activeCooldown > now then
+                textToSet = textToSet .. ': ' .. formatRemainingTime(spellConfig.activeCooldown)
+                color = 'orange'
+                if spellConfig.enableLifes and spellConfig.lifes == 0 then
+                    spellConfig.activeCooldown = nil;
+                end
+            elseif spellConfig.totalCooldown and spellConfig.totalCooldown > now then
+                textToSet = textToSet .. ': ' .. formatRemainingTime(spellConfig.totalCooldown)
+                color = 'red'
+            else
+                textToSet = textToSet .. ': 0s'
+                if spellConfig.enableMultiple and spellConfig.canReset then
+                    spellConfig.count = 3;
+                    spellConfig.canReset = false;
+                end
+                if spellConfig.enableLifes then
+                    spellConfig.lifes = 0;
+                end
+                if spellConfig.enableRevive then
+                    spellConfig.alreadyChecked = false;
+                end
+            end
+            if spellConfig.enableMultiple and spellConfig.count > 0 then
+                textToSet = '' .. spellConfig.count .. ' | ' .. textToSet
+            end
+            if spellConfig.enableLifes and spellConfig.lifes > 0 then
+                textToSet = '' .. spellConfig.lifes .. ' | ' .. textToSet
+            end
+            widget:setText(textToSet)
+            widget:setColor(color)
+        end
+    end
+end);
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+storage.widgetPos = storage.widgetPos or {}
+
+local widgetConfig = [[
+UIWidget
+  background-color: black
+  opacity: 0.75
+  padding: 0 5
+  focusable: true
+  phantom: false
+  draggable: true
+  text-auto-resize: true
+
+]]
+
+local testTable = {}
+
+testTable['fugaWidget'] = setupUI(widgetConfig, g_ui.getRootWidget())
+
+local function attachSpellWidgetCallbacks(key)
+  testTable[key].onDragEnter = function(widget, mousePos)
+      if not modules.corelib.g_keyboard.isCtrlPressed() then
+          return false
+      end
+      widget:breakAnchors()
+      widget.movingReference = { x = mousePos.x - widget:getX(), y = mousePos.y - widget:getY() }
+      return true
+  end
+
+  testTable[key].onDragMove = function(widget, mousePos, moved)
+      local parentRect = widget:getParent():getRect()
+      local x = math.min(math.max(parentRect.x, mousePos.x - widget.movingReference.x), parentRect.x + parentRect.width - widget:getWidth())
+      local y = math.min(math.max(parentRect.y - widget:getParent():getMarginTop(), mousePos.y - widget.movingReference.y), parentRect.y + parentRect.height - widget:getHeight())
+      widget:move(x, y)
+      return true
+  end
+
+  testTable[key].onDragLeave = function(widget, pos)
+      storage.widgetPos[key] = {}
+      storage.widgetPos[key].x = widget:getX();
+      storage.widgetPos[key].y = widget:getY();
+      return true
+  end
+end
+
+for key, value in pairs(testTable) do
+  attachSpellWidgetCallbacks(key)
+  testTable[key]:setPosition(
+      storage.widgetPos[key] or {0, 50}
+  )
+end
+
+if type(storage.Attacking) ~= 'table' then
+  storage.Attacking = {}
+ end
+ 
+function ct()
+    if not attackers then return 30 end
+    if attackers < 2 then
+        return(35 + (10 * tonumber(attackers)))
+    end
+    if attackers >= 2 and attackers <= 5 then
+        return(40 + (5 * tonumber(attackers)))
+    else
+        return(85)
+    end
+end
+
+ macro(100, function()
+  if not storage.Attacking[1] then attackers = 0 return end
+  for c, q in ipairs(storage.Attacking) do
+   if not attackers or c > attackers then
+    attackers = c
+   elseif not q[attackers] and attackers > 1 then
+    attackers = attackers - 1
+   end
+   if q.t < now then
+    table.remove(storage.Attacking, c)
+   end 
+  end
+ end)
+
+ onTextMessage(function(mode, text)
+  for _, p in ipairs(getSpectators(posz())) do
+   if p:isPlayer() and text:find(p:getName()) and text:find('attack by') then
+    for c, q in ipairs(storage.Attacking) do
+     if q.n == p:getName() then
+      table.remove(storage.Attacking, c)
+     end
+    end
+    table.insert(storage.Attacking, {n = p:getName(), t = (now + 1500)})
+    break
+   end
+  end
+ end)
+
+ macro(1, function()
+  if not attackers then return end
+  testTable['fugaWidget']:setText("Oponentes " .. attackers .. " | Porcentagem " .. ct() .. '%')
+  testTable['fugaWidget']:setFont('verdana-11px-rounded')  
+  if attackers <= 0 then
+    testTable['fugaWidget']:setColor('white')
+  else
+    testTable['fugaWidget']:setColor('orange')
+  end
+ end)
+
+
+local selfPlayer = g_game.getLocalPlayer();
+
+macro(1, function()
+    if not fugaIcon.title:isOn() then return; end
+    if isInPz() then return; end
+    local selfHealth, hpEscape = g_game.getLocalPlayer():getHealthPercent(), ct()
+    for key, value in ipairs(storageProfiles.fugaSpells) do
+        if value.enabled and (selfHealth <= hpEscape) then
+            if (not value.totalCooldown or value.totalCooldown <= now) then
+                if not canCastFuga() then
+			            stopCombo = now + 250;
+                    forceSay(value.spellCast);
+                end
+            end
+        end
+    end
+end);
+
+macro(1, function()
+  for key, value in ipairs(storageProfiles.fugaSpells) do
+    if (modules.game_console:isChatEnabled()) then return end
+    if value.enabled and (modules.corelib.g_keyboard.isKeyPressed(value.keyPress)) then
+          stopCombo = now + 250;
+          return forceSay(value.spellCast);
+    end
   end
 end)
 
-addIcon("Buff", {item={id=3292 , count=1}, text="Buff"}, macro(2000, function()
-  if not currentConfig then return end 
-    if isInPz() then return end
-    if attackers >= 1 then return end
-    for index, value in ipairs(currentConfig.BUFF) do
-      if (player:getSkillLevel(3) == 10 or player:getSkillLevel(3) == 21 or player:getSkillLevel(3) == 25) then
-        say(value.text)
-        delay(1500)
-      end
-      if (player:getSkillLevel(3) >= 50 and player:getSkillLevel(3) <= 80) then
-          say('kekkei genkai')
-      end
+macro(1, function()
+if not g_mouse.isPressed(7) then return; end
+    for key, value in ipairs(storageProfiles.fugaSpells) do
+       if value.enabled and (g_mouse.isPressed(7)) then
+            if (not value.totalCooldown or value.totalCooldown <= now) then
+                if not canCastFuga() then
+		                stopCombo = now + 250;
+                    return forceSay(value.spellCast);
+                end
+            end
+        end
     end
-end))
+end)
+
+
+onTalk(function(name, level, mode, text, channelId, pos)
+    text = text:lower();
+    if name ~= player:getName() then return; end
+    for index, value in ipairs(storageProfiles.fugaSpells) do
+        if text == value.orangeSpell then
+            if value.enableLifes then
+                value.activeCooldown = now + (value.cooldownActive * 1000) - 250;
+                value.totalCooldown = now + (value.cooldownTotal * 1000) - 250;
+                value.lifes = value.amountLifes;
+            end
+            if value.enableRevive and not value.alreadyChecked then
+                value.totalCooldown = now + (value.cooldownTotal * 1000) - 250;
+                value.activeCooldown = now + (value.cooldownActive * 1000) - 250;
+                value.alreadyChecked = true;
+            end
+            if value.enableMultiple then
+                if value.count > 0 then
+                    value.count = value.count - 1
+                    value.activeCooldown = now + (value.cooldownActive * 1000) - 250
+                    if value.count == 0 then
+                        value.totalCooldown = now + (value.cooldownTotal * 1000) - 250
+                        value.canReset = true;
+                        break;
+                    end
+                end
+            end
+            if not (value.enableLifes or value.enableRevive or value.enableMultiple) then
+                value.activeCooldown = now + (value.cooldownActive * 1000) - 250;
+                value.totalCooldown = now + (value.cooldownTotal * 1000) - 250;
+                break
+            end
+        end
+    end
+end);
+
+onTextMessage(function(mode, text)
+    for key, value in ipairs(storageProfiles.fugaSpells) do
+        if value.enableLifes then
+            if text:lower():find('morreu e renasceu') and value.activeCooldown and value.activeCooldown >= now then
+                value.lifes = value.lifes - 1;
+            end
+        end
+    end
+end);
+
+onPlayerPositionChange(function(newPos, oldPos)
+    local izanagiPos = { x = 1214, y = 686, z = 6 };
+    for key, value in ipairs(storageProfiles.fugaSpells) do
+        if value.enableRevive and value.spellCast == 'izanagi' then
+            if newPos.x == izanagiPos.x and newPos.y == izanagiPos.y and newPos.z == izanagiPos.z then
+                value.activeCooldown = nil;
+                value.alreadyChecked = true;
+            end
+        end
+    end
+end);
