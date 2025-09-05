@@ -1,3 +1,1113 @@
-macro(20000, function()
-say("TESTE GITHUB")
+local configName = modules.game_bot.contentsPanel.config:getCurrentOption().text
+local MAIN_DIRECTORY = "/bot/" .. configName .. "/vBot_Configs/storageScripts/"
+
+mainTab:setImageSource("/bot/" .. configName .. "/imagens/fundomago")
+local function getCharName()
+  return (g_game.getCharacterName and g_game.getCharacterName()) or
+         (g_game.getLocalPlayer() and g_game.getLocalPlayer():getName()) or
+         "UNKNOWN"
+end
+local STORAGE_DIRECTORY = MAIN_DIRECTORY .. getCharName() .. '.json'
+
+if not g_resources.directoryExists(MAIN_DIRECTORY) then
+  g_resources.makeDir(MAIN_DIRECTORY)
+end
+
+local function loadCharStorage()
+  if not g_resources.fileExists(STORAGE_DIRECTORY) then return {} end
+  local content = g_resources.readFileContents(STORAGE_DIRECTORY)
+  local ok, data = pcall(function() return json.decode(content) end)
+  if ok and type(data) == "table" then return data else return {} end
+end
+
+local function saveCharStorage(data)
+  local content = encodePretty(data)
+  g_resources.writeFileContents(STORAGE_DIRECTORY, content)
+end
+
+-- Carrega storage do personagem, cria se não existir
+local charStorage = loadCharStorage()
+
+function encodePretty(value, indent)
+  indent = indent or 0
+  local indentStr = string.rep("  ", indent)
+  local nextIndentStr = string.rep("  ", indent + 1)
+
+  if type(value) == "table" then
+    local isArray = (#value > 0)
+    local lines = {}
+
+    if isArray then
+      for _, v in ipairs(value) do
+        table.insert(lines, nextIndentStr .. encodePretty(v, indent + 1))
+      end
+      return "[\n" .. table.concat(lines, ",\n") .. "\n" .. indentStr .. "]"
+    else
+      for k, v in pairs(value) do
+        local key = string.format("%q", k)
+        local val = encodePretty(v, indent + 1)
+        table.insert(lines, nextIndentStr .. key .. ": " .. val)
+      end
+      return "{\n" .. table.concat(lines, ",\n") .. "\n" .. indentStr .. "}"
+    end
+
+  elseif type(value) == "string" then
+    return string.format("%q", value)
+  elseif type(value) == "number" or type(value) == "boolean" then
+    return tostring(value)
+  else
+    return "\"<unsupported>\""
+  end
+end
+
+local function aplicarEfeitoPainel(painel)
+  local opacidade = 0
+  painel:setOpacity(0)
+  painel:show()
+
+  macro(50, function()
+    if opacidade < 1 then
+      opacidade = opacidade + 0.12
+      if opacidade > 1 then opacidade = 1 end
+      painel:setOpacity(opacidade)
+    else
+      return false
+    end
+  end)
+end
+
+local function esconderComFade(painel)
+  local opacidade = 1
+  painel:setOpacity(1)
+
+  macro(50, function()
+    if opacidade > 0 then
+      opacidade = opacidade - 0.24
+      if opacidade < 0 then opacidade = 0 end
+      painel:setOpacity(opacidade)
+      schedule(300, function()
+        painel:hide()
+      end)
+    else
+      return false
+    end
+  end)
+end
+
+------------------------------------
+local panelName_buttonsSCRIPTS = "buttonsSCRIPTS"
+charStorage[panelName_buttonsSCRIPTS] = charStorage[panelName_buttonsSCRIPTS] or {}
+charStorage[panelName_buttonsSCRIPTS].position = charStorage[panelName_buttonsSCRIPTS].position or {x = 600, y = 400}
+
+local buttons = setupUI([[  
+UIWindow
+  id: panelButtons
+  size: 450 120
+  border: 1 black
+  image-border: 7
+
+  Panel
+    id: labelName
+    anchors.top: parent.top
+    anchors.right: parent.right
+    anchors.left: parent.left
+    image-border: 1
+    color: white
+    font: verdana-11px-rounded
+    text: 
+    text-align: left
+    margin-top: 7
+    margin-left: 7
+    margin-right: 36
+
+  Button
+    id: closePanel
+    anchors.top: parent.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    size: 20 15
+    text: -
+    color: red
+    font: verdana-11px-rounded
+    text-align: center
+    margin-right: 10
+    margin-top: 7
+
+  Panel
+    id: panelButtons
+    anchors.top: prev.bottom
+    image-border: 7
+    size: 400 100
+    opacity: 0.80
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+    Button
+      id: Healing
+      anchors.top: parent.top
+      anchors.left: parent.left
+      margin-top: 8
+      margin-left: 10
+      size: 100 18
+      text: Healing
+      font: verdana-11px-rounded
+      color: white
+      
+    Button
+      id: Extras
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Extras
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Cavebot
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Cavebot
+      font: verdana-11px-rounded
+      color: white
+    
+    Button
+      id: Targeting
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Targeting
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Analyzer
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 10
+      size: 100 18
+      text: Analyzer
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Hotkeys
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Hotkeys
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Scripts
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Tools Script
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: NavParty
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Nav/Party
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: List
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 10
+      size: 100 18
+      text: Lists
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Swap
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Swap
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: HUD
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: HUD
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Icons
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Icons
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Kina
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 10
+      size: 20 18
+      text: 1
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Pally
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 3
+      size: 20 18
+      text: 2
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Mage
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 3
+      size: 20 18
+      text: 3
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Monk
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 3
+      size: 20 18
+      text: 4
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Info
+      anchors.top: parent.top
+      anchors.left: prev.right
+      margin-top: 8
+      margin-left: 3
+      size: 12 18
+      text: ?
+      text-align: center
+      font: verdana-11px-rounded
+      color: white
+      tooltip: 1 = Knight, 2 = Paladin, 3 = Mage, 4 = Monk
+
+    Button
+      id: Conditions
+      anchors.top: prev.bottom
+      anchors.left: Kina.left
+      margin-top: 5
+      size: 100 18
+      text: Conditions
+      font: verdana-11px-rounded
+      color: white
+
+    Button
+      id: Alarms
+      anchors.top: prev.bottom
+      anchors.left: prev.left
+      margin-top: 5
+      size: 100 18
+      text: Alarms
+      font: verdana-11px-rounded
+      color: white
+
+]], g_ui.getRootWidget())
+buttons:show()
+buttons:setImageSource("/bot/" .. configName .. "/imagens/panels/window_headless")
+buttons.panelButtons.Healing:setImageSource("/bot/" .. configName .. "/imagens/panels/button_square")
+buttons.closePanel:setImageSource("/bot/" .. configName .. "/imagens/panels/button_square")
+buttons.panelButtons.Extras:setImageSource("/bot/" .. configName .. "/imagens/panels/button_square")
+buttons.panelButtons.Cavebot:setImageSource("/bot/" .. configName .. "/imagens/panels/button_square")
+buttons.panelButtons.Targeting:setImageSource("/bot/" .. configName .. "/imagens/panels/button_square")
+buttons.panelButtons.Analyzer:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Hotkeys:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.NavParty:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Scripts:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.List:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Swap:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.HUD:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Icons:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Kina:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Pally:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Mage:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Monk:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Info:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Conditions:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+buttons.panelButtons.Alarms:setImageSource("/bot/" .. configName .. "/imagens/panels/tabbutton_rounded")
+
+buttons.closePanel.onClick = function()
+  esconderComFade(buttons)
+end
+
+hotkey("F12", function()
+  if not buttons:isVisible() then
+    aplicarEfeitoPainel(buttons)
+  else
+    esconderComFade(buttons)
+  end
 end)
+
+macro(1000, function()
+  local ping = g_game.getPing() or 0
+  buttons.labelName:setColoredText({
+    " ElfBot NG v1.0 [For OTC] - ", "white", "Ping: ", "green", ping .. "ms", "green",
+  })
+end)
+
+if charStorage[panelName_buttonsSCRIPTS].position then
+  local pos = charStorage[panelName_buttonsSCRIPTS].position
+  buttons:breakAnchors()
+  buttons:move(pos.x, pos.y)
+end
+
+buttons.onDragEnter = function(widget, mousePos)
+  widget:breakAnchors()
+  widget.movingReference = {x = mousePos.x - widget:getX(), y = mousePos.y - widget:getY()}
+  return true
+end
+
+local saveBUTTONSPOS
+buttons.onDragMove = function(widget, mousePos)
+  local parentRect = widget:getParent():getRect()
+  local x = math.min(math.max(parentRect.x, mousePos.x - widget.movingReference.x), parentRect.x + parentRect.width - widget:getWidth())
+  local y = math.min(math.max(parentRect.y, mousePos.y - widget.movingReference.y), parentRect.y + parentRect.height - widget:getHeight())
+  widget:move(x, y)
+  charStorage[panelName_buttonsSCRIPTS].position = {x = x, y = y}
+  if saveBUTTONSPOS then removeEvent(saveBUTTONSPOS) end
+  saveBUTTONSPOS = schedule(1000, function()
+    saveCharStorage(charStorage)
+  end)
+  return true
+end
+
+local configName = modules.game_bot.contentsPanel.config:getCurrentOption().text
+
+local configFiles = g_resources.listDirectoryFiles("/bot/" .. configName .. "/vBot", true, false)
+for i, file in ipairs(configFiles) do
+  local ext = file:split(".")
+  if ext[#ext]:lower() == "ui" or ext[#ext]:lower() == "otui" then
+    g_ui.importStyle(file)
+  end
+end
+
+local function loadScript(name)
+  return dofile("/vBot/" .. name .. ".lua")
+end
+
+local luaFiles = {
+  "items",
+  "extras",
+  "containers",
+  "vlib",
+  "new_cavebot_lib",
+  "_cavebot",
+  "targetonetab",
+  "cavebot_control_panel",
+  "supplies",
+  
+  
+  
+}
+
+for i, file in ipairs(luaFiles) do
+  loadScript(file)
+end
+
+
+buttons.panelButtons.Cavebot.onClick = function()
+  if not curaWindow:isVisible() then
+    aplicarEfeitoPainel(curaWindow)
+  else
+    esconderComFade(curaWindow)
+  end
+end
+
+buttons.panelButtons.Targeting.onClick = function()
+  if not targetoneWindow:isVisible() then
+    aplicarEfeitoPainel(targetoneWindow)
+  else
+    esconderComFade(targetoneWindow)
+  end
+end
+
+buttons.panelButtons.Extras.onClick = function()
+  if not extrasWindow:isVisible() then
+    aplicarEfeitoPainel(extrasWindow)
+  else
+    esconderComFade(extrasWindow)
+  end
+end
+
+local charName =
+  (g_game.getCharacterName and g_game.getCharacterName()) or
+  (g_game.getLocalPlayer() and g_game.getLocalPlayer():getName())
+
+local selectionVocation = "vocationSelector"
+charStorage = loadCharStorage() or {}
+charStorage[selectionVocation] = charStorage[selectionVocation] or {}
+charStorage[selectionVocation].charVocation = charStorage[selectionVocation].charVocation or {}
+
+local currentVocation = charStorage[selectionVocation].charVocation[charName]
+
+function botPrintMessage(message)
+  modules.game_textmessage.displayGameMessage(message)
+end
+
+local function resetButtonColors()
+  buttons.panelButtons.Kina:setColor("gray")
+  buttons.panelButtons.Pally:setColor("gray")
+  buttons.panelButtons.Mage:setColor("gray")
+  buttons.panelButtons.Monk:setColor("gray")
+end
+
+local function setVocationForChar(vocTag, text, button)
+  charStorage[selectionVocation].charVocation[charName] = vocTag
+  saveCharStorage(charStorage)
+  botPrintMessage("Custom Selected: " .. text)
+  resetButtonColors()
+  button:setColor("green")
+end
+
+-- callbacks dos botões
+buttons.panelButtons.Kina.onClick = function()
+  setVocationForChar("vocKnight", "CUSTOM KNIGHT", buttons.panelButtons.Kina)
+end
+
+buttons.panelButtons.Pally.onClick = function()
+  setVocationForChar("vocPally", "CUSTOM PALADIN", buttons.panelButtons.Pally)
+end
+
+buttons.panelButtons.Mage.onClick = function()
+  setVocationForChar("vocMage", "CUSTOM MAGE", buttons.panelButtons.Mage)
+end
+
+buttons.panelButtons.Monk.onClick = function()
+  setVocationForChar("vocMonk", "CUSTOM MONK", buttons.panelButtons.Monk)
+end
+
+local function restoreVocationSelection()
+  resetButtonColors()
+  if currentVocation == "vocKnight" then
+    buttons.panelButtons.Kina:setColor("green")
+  elseif currentVocation == "vocPally" then
+    buttons.panelButtons.Pally:setColor("green")
+  elseif currentVocation == "vocMage" then
+    buttons.panelButtons.Mage:setColor("green")
+  elseif currentVocation == "vocMonk" then
+    buttons.panelButtons.Monk:setColor("green")
+  end
+end
+
+restoreVocationSelection()
+---------------------------------------------
+
+local panelName_healingPanel = "HealingPanel"
+
+charStorage[panelName_healingPanel] = charStorage[panelName_healingPanel] or {}
+charStorage[panelName_healingPanel].items = charStorage[panelName_healingPanel].items or {}
+charStorage[panelName_healingPanel].texts = charStorage[panelName_healingPanel].texts or {}
+charStorage[panelName_healingPanel].checkboxes = charStorage[panelName_healingPanel].checkboxes or {}
+
+local healingPanel = setupUI([[  
+MainWindow
+  id: healingPanel
+  size: 365 300
+  !text: tr('')
+  text-align: top-left
+  font: verdana-11px-rounded
+  border: 1 black
+  color: white
+
+  FlatPanel
+    id: abaSpells
+    anchors.top: parent.top
+    anchors.right: parent.right
+    anchors.left: parent.left
+    margin-top: 5
+    layout: verticalBox
+
+  Label
+    id: label
+    anchors.verticalCenter: abaSpells.top
+    anchors.left: abaSpells.left
+    margin-left: 5
+    width: 200
+    text: Auto Heal:
+    font: verdana-11px-rounded
+    color: #9f5031
+
+  Label
+    id: labelspell1
+    anchors.top: prev.bottom
+    anchors.left: prev.left
+    margin-left: 0
+    margin-top: 6
+    text-auto-resize: true
+    !text: tr('Spell1:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: spell1
+    anchors.top: label.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 5
+    height: 19
+
+  Label
+    id: labelhealth1
+    anchors.top: labelspell1.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Health:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: health1
+    anchors.top: label.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 5
+    height: 19
+    width: 40
+
+  Label
+    id: labelmana1
+    anchors.top: labelspell1.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Mana:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: mana1
+    anchors.top: label.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 5
+    height: 19
+    width: 40
+
+  Label
+    id: labelspell2
+    anchors.top: labelspell1.bottom
+    anchors.left: labelspell1.left
+    margin-left: 0
+    margin-top: 15
+    text-auto-resize: true
+    !text: tr('Spell2:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: spell2
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-top: -3
+    margin-left: 3
+    height: 19
+
+  Label
+    id: labelhealth2
+    anchors.top: labelspell2.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Health:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: health2
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-top: -3
+    margin-left: 5
+    height: 19
+    width: 40
+
+  Label
+    id: labelmana1
+    anchors.top: labelspell2.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Mana:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: mana2
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-top: -3
+    margin-left: 5
+    height: 19
+    width: 40
+
+  FlatPanel
+    id: abaPotion
+    anchors.top: abaSpells.bottom
+    anchors.right: parent.right
+    anchors.left: parent.left
+    margin-top: 15
+    layout: verticalBox
+
+  Label
+    id: labelPotion
+    anchors.verticalCenter: abaPotion.top
+    anchors.left: abaPotion.left
+    margin-left: 5
+    width: 200
+    text: Health Potion:
+    font: verdana-11px-rounded
+    color: #9f5031
+
+  BotItem
+    id: potion1
+    anchors.top: prev.bottom
+    anchors.left: prev.left
+    margin-left: 0
+    size: 40 40
+    margin-top: 6
+
+  Label
+    id: labelhealth
+    anchors.top: potion1.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Health:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: healthpotion1
+    anchors.top: labelPotion.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 5
+    height: 19
+    width: 40
+
+  Label
+    id: labelcooldown1
+    anchors.top: labelhealth.bottom
+    anchors.left: labelhealth.left
+    margin-left: 0
+    margin-top: 10
+    text-auto-resize: true
+    !text: tr('Delay: ')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: cooldown1
+    anchors.top: labelcooldown1.top
+    anchors.left: healthpotion1.left
+    margin-top: -2
+    margin-left: 0
+    height: 19
+    width: 40
+
+  BotItem
+    id: potion2
+    anchors.top: potion1.top
+    anchors.left: prev.right
+    margin-left: 40
+    size: 40 40
+    margin-top: 0
+
+  Label
+    id: labelhealth2
+    anchors.top: potion2.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Health:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: healthpotion2
+    anchors.top: labelPotion.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 5
+    height: 19
+    width: 40
+
+  Label
+    id: labelcooldown2
+    anchors.top: potion2.bottom
+    anchors.left: potion2.right
+    margin-left: 9
+    margin-top: -15
+    text-auto-resize: true
+    !text: tr('Delay: ')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: cooldown2
+    anchors.top: labelcooldown2.top
+    anchors.left: healthpotion2.left
+    margin-top: -2
+    margin-left: 0
+    height: 19
+    width: 40
+
+  FlatPanel
+    id: abaMana
+    anchors.top: abaPotion.bottom
+    anchors.right: parent.right
+    anchors.left: parent.left
+    margin-top: 15
+    layout: verticalBox
+
+  Label
+    id: labelManaPot
+    anchors.verticalCenter: abaMana.top
+    anchors.left: abaMana.left
+    margin-left: 5
+    width: 200
+    text: Mana Potion:
+    font: verdana-11px-rounded
+    color: #9f5031
+
+  BotItem
+    id: PotionMana
+    anchors.top: prev.bottom
+    anchors.left: prev.left
+    margin-left: 0
+    size: 40 40
+    margin-top: 6
+
+  Label
+    id: labelMana
+    anchors.top: PotionMana.top
+    anchors.left: prev.right
+    margin-left: 8
+    text-auto-resize: true
+    !text: tr('Mana:')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: manaPotion
+    anchors.top: labelManaPot.bottom
+    anchors.left: prev.right
+    margin-top: 4
+    margin-left: 15
+    height: 19
+    width: 40
+
+  Label
+    id: LabelcooldownManaPot
+    anchors.top: labelMana.bottom
+    anchors.left: labelMana.left
+    margin-left: 0
+    margin-top: 10
+    text-auto-resize: true
+    !text: tr('Delay: ')
+    font: verdana-11px-rounded
+    color: gray
+
+  BotTextEdit
+    id: cooldownManaPot
+    anchors.top: LabelcooldownManaPot.top
+    anchors.left: manaPotion.left
+    margin-top: -2
+    margin-left: 0
+    height: 19
+    width: 40
+
+  VerticalSeparator
+    id: separando
+    anchors.top: abaMana.top
+    anchors.bottom: abaMana.bottom
+    anchors.left: prev.right
+    margin-left: 20
+
+  Label
+    id: Ativadores
+    anchors.verticalCenter: abaMana.top
+    anchors.left: labelManaPot.right
+    margin-left: -34
+    width: 200
+    text: Ativadores:
+    font: verdana-11px-rounded
+    color: #9f5031
+
+  CheckBox
+    id: curaCheck
+    anchors.top: Ativadores.bottom
+    anchors.left: Ativadores.left
+    text-auto-resize: true
+    font: verdana-11px-rounded
+    color: gray
+    margin-top: 5
+    margin-left: 3
+    $checked:
+      text: Healings [ON]
+      image-color: green
+    $!checked:
+      text: Healings [OFF]
+      image-color: red
+
+  CheckBox
+    id: pothealthCheck
+    anchors.top: prev.bottom
+    anchors.left: prev.left
+    text-auto-resize: true
+    font: verdana-11px-rounded
+    color: gray
+    margin-top: 5
+    $checked:
+      text: Health Potions [ON]
+      image-color: green
+    $!checked:
+      text: Health Potions [OFF]
+      image-color: red  
+    
+  CheckBox
+    id: potManaCheck
+    anchors.top: prev.bottom
+    anchors.left: prev.left
+    text-auto-resize: true
+    font: verdana-11px-rounded
+    color: gray
+    margin-top: 5
+    $checked:
+      text: Mana Potion [ON]
+      image-color: green
+    $!checked:
+      text: Mana Potion [OFF]
+      image-color: red  
+
+  Button
+    id: closePanel
+    anchors.top: abaMana.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+    height: 20
+    margin-top: 8
+    text: Fechar
+    color: gray
+    font: verdana-11px-rounded
+]], g_ui.getRootWidget())
+healingPanel:hide()
+
+local itemIds = { "potion1", "potion2", "PotionMana"}
+for _, id in ipairs(itemIds) do
+  local item = healingPanel:getChildById(id)
+  if item then
+    -- Definindo o valor padrão como 3155 caso não haja nada salvo
+    local savedId = charStorage[panelName_healingPanel].items[id]
+    item:setItemId(savedId)
+
+    item.onItemChange = function(widget)
+      local itemId = widget:getItemId()
+      if itemId and itemId > 0 then
+        charStorage[panelName_healingPanel].items[id] = itemId
+      else
+        charStorage[panelName_healingPanel].items[id] = nil
+      end
+      saveCharStorage(charStorage)
+    end
+  end
+end
+
+-----
+
+local textEditDefaults = {
+  spell1 = "Exura",
+  health1 = "90",
+  mana1 = "30",
+  spell2 = "Exura Vita",
+  health2 = "70",
+  mana2 = "70",
+  healthpotion1 = "80",
+  cooldown1 = "1000",
+  healthpotion2 = "60",
+  cooldown2 = "1000",
+  manaPotion = "60",
+  cooldownManaPot = "1000"
+}
+
+local textEditIds = { "spell1", "health1", "mana1", "spell2", "health2", "mana2", "healthpotion1", "cooldown1", "healthpotion2", "cooldown2", "manaPotion", "cooldownManaPot"}
+for _, id in ipairs(textEditIds) do
+  local textEdit = healingPanel:getChildById(id)
+  if textEdit then
+    local savedText = charStorage[panelName_healingPanel].texts[id]
+    textEdit:setText(savedText or textEditDefaults[id])
+
+    textEdit.onTextChange = function(widget, text)
+      charStorage[panelName_healingPanel].texts[id] = text
+      saveCharStorage(charStorage)
+    end
+  end
+end
+
+local checkBoxIds = { "curaCheck", "pothealthCheck", "potManaCheck" }
+
+for _, id in ipairs(checkBoxIds) do
+  local checkbox = healingPanel:getChildById(id)
+  if checkbox then
+    -- carregar valor salvo ou usar default (false)
+    local savedValue = charStorage[panelName_healingPanel].checkboxes[id]
+    if savedValue ~= nil then
+      checkbox:setChecked(savedValue)
+    end
+
+    -- toda vez que mudar, salvar no charStorage
+    checkbox.onCheckChange = function(widget, checked)
+      charStorage[panelName_healingPanel].checkboxes[id] = checked
+      saveCharStorage(charStorage)
+    end
+  end
+end
+
+buttons.panelButtons.Healing.onClick = function()
+  if not healingPanel:isVisible() then
+    aplicarEfeitoPainel(healingPanel)
+  else
+    esconderComFade(healingPanel)
+  end
+end
+
+healingPanel.closePanel.onClick = function()
+    esconderComFade(healingPanel)
+end
+
+macro(50, function()
+  local storageData = charStorage[panelName_healingPanel]
+  if not storageData then return end
+
+  if not charStorage[panelName_healingPanel].checkboxes["curaCheck"] then return end
+
+  local spell1   = charStorage[panelName_healingPanel].texts["spell1"] or ""
+  local health1  = tonumber(charStorage[panelName_healingPanel].texts["health1"]) or 0
+  local mana1    = tonumber(charStorage[panelName_healingPanel].texts["mana1"]) or 0
+
+  local spell2   = charStorage[panelName_healingPanel].texts["spell2"] or ""
+  local health2  = tonumber(charStorage[panelName_healingPanel].texts["health2"]) or 0
+  local mana2    = tonumber(charStorage[panelName_healingPanel].texts["mana2"]) or 0
+
+  if spell1:len() > 0 and spell2:len() == 0 then
+    if hppercent() <= health1 and mana() >= mana1 then
+      say(spell1)
+    end
+
+  elseif spell1:len() == 0 and spell2:len() > 0 then
+    if hppercent() <= health2 and mana() >= mana2 then
+      say(spell2)
+    end
+
+  elseif spell1:len() > 0 and spell2:len() > 0 then
+    if (hppercent() >= health2 and hppercent() <= health1) and mana() >= mana1 then
+      say(spell1)
+    end
+    if hppercent() < health2 and (mana() < mana2 and mana() >= mana1) then
+      say(spell1)
+    end
+    if hppercent() < health2 and mana() >= mana2 then
+      say(spell2)
+    end
+  end
+end)
+
+-- garante que a variável existe
+stopMANAPOT = stopMANAPOT or 0
+
+macro(50, function()
+  if not healingPanel:getChildById("pothealthCheck"):isChecked() then return end
+
+  local potion1 = charStorage[panelName_healingPanel].items["potion1"] or 0
+  local potion2 = charStorage[panelName_healingPanel].items["potion2"] or 0
+
+  local healthpotion1 = tonumber(charStorage[panelName_healingPanel].texts["healthpotion1"]) or 80
+  local cooldown1 = tonumber(charStorage[panelName_healingPanel].texts["cooldown1"]) or 1000
+
+  local healthpotion2 = tonumber(charStorage[panelName_healingPanel].texts["healthpotion2"]) or 60
+  local cooldown2 = tonumber(charStorage[panelName_healingPanel].texts["cooldown2"]) or 1000
+
+  if potion1 ~= 0 and potion2 == 0 then
+    if hppercent() <= healthpotion1 then
+      stopMANAPOT = now + 200
+      useWith(potion1, player)
+      delay(cooldown1)
+    end
+  elseif potion1 == 0 and potion2 ~= 0 then
+    if hppercent() <= healthpotion2 then
+      stopMANAPOT = now + 200
+      useWith(potion2, player)
+      delay(cooldown2)
+    end
+  elseif potion1 ~= 0 and potion2 ~= 0 then
+    if hppercent() > healthpotion2 and hppercent() <= healthpotion1 then
+      stopMANAPOT = now + 200
+      useWith(potion1, player)
+      delay(cooldown1)
+    elseif hppercent() <= healthpotion2 then
+      stopMANAPOT = now + 200
+      useWith(potion2, player)
+      delay(cooldown2)
+    end
+  end
+end)
+
+macro(100, function()
+  if not charStorage[panelName_healingPanel].checkboxes["potManaCheck"] then return end
+
+  local potionMana = charStorage[panelName_healingPanel].items["PotionMana"] or 0
+  local manapotion1 = tonumber(charStorage[panelName_healingPanel].texts["manaPotion"]) or 0
+  local cooldownMana = tonumber(charStorage[panelName_healingPanel].texts["cooldownManaPot"]) or 0
+
+  if manapercent() <= manapotion1 and potionMana ~= 0 then
+    if now >= stopMANAPOT then
+      useWith(potionMana, player)
+      delay(cooldownMana)
+    end
+  end
+end)
+
+
+--------------------
+
